@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Book Management - BookSwapBuddy Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        <i class="fas fa-book text-primary me-2" aria-hidden="true"></i>Book Management
+                    </h1>
+                    <p class="text-muted">Manage book listings and status</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search Books</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   placeholder="Title, author, or subject" value="{{ search }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                {% for stat in statuses %}
+                                <option value="{{ stat }}" {% if stat == status %}selected{% endif %}>
+                                    {{ stat.title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">All Departments</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}" {% if dept == department %}selected{% endif %}>
+                                    {{ dept }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-2" aria-hidden="true"></i>Search
+                            </button>
+                            <a href="{{ url_for('admin_books') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2" aria-hidden="true"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Books Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2" aria-hidden="true"></i>Books
+                        <span class="badge bg-secondary ms-2">{{ books.total }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if books.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Book Details</th>
+                                    <th>Owner</th>
+                                    <th>Academic Info</th>
+                                    <th>Price & Type</th>
+                                    <th>Status</th>
+                                    <th>Stats</th>
+                                    <th>Listed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in books.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-start">
+                                            {% if book.image_filename %}
+                                            <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                                                 alt="Cover of {{ book.title }}" class="book-thumbnail me-3">
+                                            {% else %}
+                                            <div class="book-placeholder me-3">
+                                                <i class="fas fa-book" aria-hidden="true"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-1">{{ book.title }}</h6>
+                                                <small class="text-muted d-block">by {{ book.author }}</small>
+                                                <small class="text-muted">{{ book.subject }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">{{ book.owner.username }}</h6>
+                                            <small class="text-muted">{{ book.owner.full_name }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small class="text-muted d-block">{{ book.department }}</small>
+                                            <small class="text-muted">Year {{ book.year_of_study }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            {% if book.price %}
+                                            <span class="fw-bold text-success">₹{{ "%.2f"|format(book.price) }}</span>
+                                            {% else %}
+                                            <span class="text-muted">Free</span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ book.swap_type.title() }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('update_book_status', book_id=book.id) }}" class="d-inline">
+                                            <select name="status" class="form-select form-select-sm" 
+                                                    onchange="this.form.submit()" 
+                                                    title="Update book status" 
+                                                    aria-label="Update status for {{ book.title }}">
+                                                <option value="available" {% if book.status == 'available' %}selected{% endif %}>Available</option>
+                                                <option value="sold" {% if book.status == 'sold' %}selected{% endif %}>Sold</option>
+                                                <option value="reserved" {% if book.status == 'reserved' %}selected{% endif %}>Reserved</option>
+                                                <option value="suspended" {% if book.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small class="text-muted d-block">{{ book.views or 0 }} views</small>
+                                            <small class="text-muted">{{ book.reviews|length }} reviews</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ book.created_at|timeago }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('book_detail', id=book.id) }}" 
+                                               class="btn btn-outline-primary" title="View Book" target="_blank">
+                                                <i class="fas fa-eye" aria-hidden="true"></i>
+                                            </a>
+                                            
+                                            <form method="POST" action="{{ url_for('delete_book', book_id=book.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this book? This action cannot be undone.')">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete Book">
+                                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-book fa-3x text-muted mb-3" aria-hidden="true"></i>
+                        <h5>No Books Found</h5>
+                        <p class="text-muted">No books match your search criteria.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if books.pages > 1 %}
+                <div class="card-footer">
+                    <nav aria-label="Book pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if books.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_books', page=books.prev_num, search=search, status=status, department=department) }}"
+                                   title="Previous page" aria-label="Previous page">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% for page_num in books.iter_pages() %}
+                            {% if page_num %}
+                            {% if page_num != books.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_books', page=page_num, search=search, status=status, department=department) }}"
+                                   title="Go to page {{ page_num }}" aria-label="Go to page {{ page_num }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link" aria-current="page" aria-label="Current page {{ page_num }}">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-label="Page break">…</span>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if books.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_books', page=books.next_num, search=search, status=status, department=department) }}"
+                                   title="Next page" aria-label="Next page">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-thumbnail {
+    width: 60px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.25rem;
+}
+
+.book-placeholder {
+    width: 60px;
+    height: 80px;
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
+}
+
+.form-select-sm {
+    min-width: 120px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
+{% endblock %}

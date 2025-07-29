@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Book - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('book_detail', id=book.id) }}" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Book
+                </a>
+                <h1 class="display-6 fw-bold mb-0">
+                    <i class="fas fa-edit text-warning me-2" aria-hidden="true"></i>Edit Book
+                </h1>
+            </div>
+            <p class="text-muted">
+                Update your book information. Make sure all details are accurate.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Edit Book Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book me-2" aria-hidden="true"></i>Book Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('edit_book', id=book.id) }}" method="POST" enctype="multipart/form-data" id="edit-book-form">
+                        <!-- Book Details Section -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="title" class="form-label">Book Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       required maxlength="200" value="{{ book.title }}"
+                                       placeholder="Enter the complete book title">
+                                <div class="form-text">Include edition if applicable</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="author" class="form-label">Author *</label>
+                                <input type="text" class="form-control" id="author" name="author" 
+                                       required maxlength="100" value="{{ book.author }}"
+                                       placeholder="Author name">
+                                <div class="form-text">Primary author or editor</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <input type="text" class="form-control" id="subject" name="subject" 
+                                       required maxlength="100" value="{{ book.subject }}"
+                                       placeholder="e.g., Data Structures, Calculus">
+                                <div class="form-text">Course or subject name</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department *</label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Computer Science" {% if book.department == 'Computer Science' %}selected{% endif %}>Computer Science</option>
+                                    <option value="Electronics & Communication" {% if book.department == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+                                    <option value="Mechanical Engineering" {% if book.department == 'Mechanical Engineering' %}selected{% endif %}>Mechanical Engineering</option>
+                                    <option value="Civil Engineering" {% if book.department == 'Civil Engineering' %}selected{% endif %}>Civil Engineering</option>
+                                    <option value="Electrical Engineering" {% if book.department == 'Electrical Engineering' %}selected{% endif %}>Electrical Engineering</option>
+                                    <option value="Mathematics" {% if book.department == 'Mathematics' %}selected{% endif %}>Mathematics</option>
+                                    <option value="Physics" {% if book.department == 'Physics' %}selected{% endif %}>Physics</option>
+                                    <option value="Chemistry" {% if book.department == 'Chemistry' %}selected{% endif %}>Chemistry</option>
+                                    <option value="Biology" {% if book.department == 'Biology' %}selected{% endif %}>Biology</option>
+                                    <option value="Commerce" {% if book.department == 'Commerce' %}selected{% endif %}>Commerce</option>
+                                    <option value="Economics" {% if book.department == 'Economics' %}selected{% endif %}>Economics</option>
+                                    <option value="English Literature" {% if book.department == 'English Literature' %}selected{% endif %}>English Literature</option>
+                                    <option value="Hindi Literature" {% if book.department == 'Hindi Literature' %}selected{% endif %}>Hindi Literature</option>
+                                    <option value="History" {% if book.department == 'History' %}selected{% endif %}>History</option>
+                                    <option value="Political Science" {% if book.department == 'Political Science' %}selected{% endif %}>Political Science</option>
+                                    <option value="Psychology" {% if book.department == 'Psychology' %}selected{% endif %}>Psychology</option>
+                                    <option value="Sociology" {% if book.department == 'Sociology' %}selected{% endif %}>Sociology</option>
+                                    <option value="Other" {% if book.department == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="year_of_study" class="form-label">Year of Study *</label>
+                                <select class="form-select" id="year_of_study" name="year_of_study" required>
+                                    <option value="">Select Year</option>
+                                    <option value="1" {% if book.year_of_study == 1 %}selected{% endif %}>1st Year</option>
+                                    <option value="2" {% if book.year_of_study == 2 %}selected{% endif %}>2nd Year</option>
+                                    <option value="3" {% if book.year_of_study == 3 %}selected{% endif %}>3rd Year</option>
+                                    <option value="4" {% if book.year_of_study == 4 %}selected{% endif %}>4th Year</option>
+                                    <option value="5" {% if book.year_of_study == 5 %}selected{% endif %}>5th Year</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="condition" class="form-label">Book Condition *</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="">Select Condition</option>
+                                    <option value="Excellent" {% if book.condition == 'Excellent' %}selected{% endif %}>Excellent - Like new</option>
+                                    <option value="Very Good" {% if book.condition == 'Very Good' %}selected{% endif %}>Very Good - Minor wear</option>
+                                    <option value="Good" {% if book.condition == 'Good' %}selected{% endif %}>Good - Some wear, readable</option>
+                                    <option value="Fair" {% if book.condition == 'Fair' %}selected{% endif %}>Fair - Heavy wear, readable</option>
+                                    <option value="Poor" {% if book.condition == 'Poor' %}selected{% endif %}>Poor - Significant damage</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Exchange Type & Price -->
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label for="swap_type" class="form-label">Exchange Type *</label>
+                                <select class="form-select" id="swap_type" name="swap_type" required onchange="togglePrice()">
+                                    <option value="">Select Type</option>
+                                    <option value="sell" {% if book.swap_type == 'sell' %}selected{% endif %}>Sell for Money</option>
+                                    <option value="swap" {% if book.swap_type == 'swap' %}selected{% endif %}>Swap for Another Book</option>
+                                    <option value="free" {% if book.swap_type == 'free' %}selected{% endif %}>Give Away Free</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6" id="price-section" style="display: {% if book.swap_type == 'sell' %}block{% else %}none{% endif %};">
+                                <label for="price" class="form-label">Price (₹) *</label>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       min="0" step="0.01" value="{{ book.price if book.price else '' }}"
+                                       placeholder="Enter price in rupees">
+                                <div class="form-text">Set a fair price for your book</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="row g-3 mt-3">
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="4" maxlength="1000" 
+                                          placeholder="Additional details about the book (optional)">{{ book.description if book.description else '' }}</textarea>
+                                <div class="form-text">
+                                    <span id="char-count">{{ book.description|length if book.description else 0 }}</span>/1000 characters
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Upload -->
+                        <div class="row g-3 mt-3">
+                            <div class="col-12">
+                                <label for="image" class="form-label">Book Image</label>
+                                {% if book.image_filename %}
+                                <div class="mb-3">
+                                    <p class="text-muted">Current image:</p>
+                                    <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                                         alt="Current book image" class="img-thumbnail" style="max-height: 200px;">
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control" id="image" name="image" 
+                                       accept="image/jpeg,image/jpg,image/png" onchange="previewImage(this)">
+                                <div class="form-text">
+                                    Upload a clear photo of your book. JPG, JPEG, PNG allowed. Max 5MB.
+                                    {% if book.image_filename %}Leave empty to keep current image.{% endif %}
+                                </div>
+                                <div id="image-preview" class="mt-3" style="display: none;">
+                                    <img id="preview" src="" alt="Image preview" class="img-thumbnail" style="max-height: 200px;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('book_detail', id=book.id) }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2" aria-hidden="true"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save me-2" aria-hidden="true"></i>Update Book
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePrice() {
+    const swapType = document.getElementById('swap_type').value;
+    const priceSection = document.getElementById('price-section');
+    const priceInput = document.getElementById('price');
+    
+    if (swapType === 'sell') {
+        priceSection.style.display = 'block';
+        priceInput.required = true;
+    } else {
+        priceSection.style.display = 'none';
+        priceInput.required = false;
+        priceInput.value = '';
+    }
+}
+
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Character count for description
+document.getElementById('description').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('char-count').textContent = charCount;
+});
+
+// Form validation
+document.getElementById('edit-book-form').addEventListener('submit', function(e) {
+    const swapType = document.getElementById('swap_type').value;
+    const price = document.getElementById('price').value;
+    
+    if (swapType === 'sell' && (!price || price <= 0)) {
+        e.preventDefault();
+        alert('Please enter a valid price for selling.');
+        document.getElementById('price').focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

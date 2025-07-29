@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}BookSwapBuddy - Home | Student Book Exchange Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold">
+                    Exchange Books, <br>
+                    <span class="text-primary">Build Knowledge</span>
+                </h1>
+                <p class="lead">
+                    India's premier student book exchange platform. Buy, sell, and swap academic books 
+                    with fellow students across the country. Save money, reduce waste, and build connections.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Join Now - It's Free!
+                    </a>
+                    <a href="{{ url_for('books') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Books
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('add_book') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add Your Book
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-image mt-4 mt-lg-0">
+                    <i class="fas fa-book-reader" style="font-size: 12rem; color: var(--primary-color); opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Search Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h3 class="text-center mb-4">
+                            <i class="fas fa-search text-primary me-2"></i>Find Your Next Book
+                        </h3>
+                        <form action="{{ url_for('books') }}" method="GET" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control form-control-lg" 
+                                       name="search" placeholder="Search by title, author, or subject..."
+                                       aria-label="Search books">
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select form-select-lg" name="department" aria-label="Select department">
+                                    <option value="">All Departments</option>
+                                    <option value="Computer Science Engineering">Computer Science</option>
+                                    <option value="Electronics and Communication">Electronics & Communication</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Chemical Engineering">Chemical Engineering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <span class="stats-number">{{ stats.total_books }}</span>
+                    <span class="stats-label">Books Available</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card" style="background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);">
+                    <span class="stats-number">{{ stats.total_users }}</span>
+                    <span class="stats-label">Active Students</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card" style="background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);">
+                    <span class="stats-number">{{ stats.books_exchanged }}</span>
+                    <span class="stats-label">Books Exchanged</span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stats-card" style="background: linear-gradient(135deg, var(--warning-color) 0%, var(--secondary-color) 100%);">
+                    <span class="stats-number">{{ stats.active_exchanges }}</span>
+                    <span class="stats-label">Active Conversations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Why Choose BookSwapBuddy?</h2>
+            <p class="lead text-muted">Designed specifically for Indian students with features that matter</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-qrcode fa-3x text-primary"></i>
+                        </div>
+                        <h4>QR Code Verification</h4>
+                        <p class="text-muted">
+                            Secure book exchanges with QR code verification. 
+                            Scan to confirm authenticity during meetups.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-brain fa-3x text-primary"></i>
+                        </div>
+                        <h4>Smart Recommendations</h4>
+                        <p class="text-muted">
+                            AI-powered book suggestions based on your department, 
+                            year, and search history.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-comments fa-3x text-primary"></i>
+                        </div>
+                        <h4>Built-in Messaging</h4>
+                        <p class="text-muted">
+                            Chat directly with book owners to negotiate 
+                            prices and arrange meetups.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-filter fa-3x text-primary"></i>
+                        </div>
+                        <h4>Campus-Specific Filters</h4>
+                        <p class="text-muted">
+                            Filter books by college, hostel, department, 
+                            and academic year for relevant results.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-trophy fa-3x text-primary"></i>
+                        </div>
+                        <h4>Gamification & Rewards</h4>
+                        <p class="text-muted">
+                            Earn points, unlock badges, and climb the 
+                            leaderboard for active participation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 text-center border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-heart fa-3x text-primary"></i>
+                        </div>
+                        <h4>Wishlist & Alerts</h4>
+                        <p class="text-muted">
+                            Add books to your wishlist and get notified 
+                            when they become available.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Books Section -->
+{% if recent_books %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="display-6 fw-bold">Recently Added Books</h2>
+            <a href="{{ url_for('books') }}" class="btn btn-outline-primary">
+                View All Books <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        
+        <div class="row g-4" id="recent-books-grid">
+            {% for book in recent_books %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card book-card h-100 shadow-sm">
+                    <div class="position-relative">
+                        {% if book.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                             class="card-img-top" alt="{{ book.title }}"
+                             style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                             style="height: 200px;">
+                            <i class="fas fa-book fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        {% if book.swap_type == 'free' %}
+                        <span class="position-absolute top-0 end-0 badge bg-success m-2">FREE</span>
+                        {% elif book.swap_type == 'swap' %}
+                        <span class="position-absolute top-0 end-0 badge bg-info m-2">SWAP</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ book.title }}</h5>
+                        <p class="card-text text-muted small">by {{ book.author }}</p>
+                        <p class="card-text">{{ book.subject }}</p>
+                        <p class="card-text small">
+                            <i class="fas fa-graduation-cap me-1"></i>{{ book.department }} - Year {{ book.year_of_study }}
+                        </p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                {% if book.swap_type == 'sell' %}
+                                <span class="book-price">₹{{ "%.0f"|format(book.price) }}</span>
+                                {% else %}
+                                <span class="book-price">{{ book.swap_type.upper() }}</span>
+                                {% endif %}
+                                <span class="badge condition-{{ book.condition.lower().replace(' ', '-') }}">
+                                    {{ book.condition }}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('book_detail', id=book.id) }}" 
+                                   class="btn btn-primary btn-sm flex-fill">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                {% if session.user_id and session.user_id != book.user_id %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                        onclick="BookSwapBuddy.addToWishlist('{{ book.title }}', '{{ book.author }}', '{{ book.subject }}')"
+                                        title="Add to Wishlist">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+            <p class="lead text-muted">Simple steps to start exchanging books</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4">1</span>
+                </div>
+                <h4>Sign Up</h4>
+                <p class="text-muted">
+                    Create your account with your college details. 
+                    It's completely free!
+                </p>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4">2</span>
+                </div>
+                <h4>List or Search</h4>
+                <p class="text-muted">
+                    Upload books you want to sell/exchange or 
+                    search for books you need.
+                </p>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4">3</span>
+                </div>
+                <h4>Connect</h4>
+                <p class="text-muted">
+                    Message other students to negotiate 
+                    and arrange meetups.
+                </p>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4">4</span>
+                </div>
+                <h4>Exchange</h4>
+                <p class="text-muted">
+                    Meet safely on campus and complete 
+                    the exchange with QR verification.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+{% if not session.user_id %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-5" style="background: linear-gradient(135deg, var(--bg-accent) 0%, var(--bg-secondary) 100%);">
+                        <h2 class="display-6 fw-bold mb-3">Ready to Start Saving on Books?</h2>
+                        <p class="lead mb-4">
+                            Join thousands of students across India who are already saving money 
+                            and building connections through BookSwapBuddy.
+                        </p>
+                        <div class="d-flex flex-wrap justify-content-center gap-3">
+                            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Create Free Account
+                            </a>
+                            <a href="{{ url_for('books') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Browse Books First
+                            </a>
+                        </div>
+                        <p class="mt-3 text-muted small">
+                            <i class="fas fa-check-circle text-success me-1"></i>Free forever
+                            <i class="fas fa-check-circle text-success me-1 ms-3"></i>No hidden fees
+                            <i class="fas fa-check-circle text-success me-1 ms-3"></i>Secure exchanges
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any homepage-specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate statistics on scroll
+    const animateStats = () => {
+        const statsElements = document.querySelectorAll('.stats-number');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const finalValue = parseInt(entry.target.textContent);
+                    animateNumber(entry.target, 0, finalValue, 2000);
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+        
+        statsElements.forEach(el => observer.observe(el));
+    };
+    
+    const animateNumber = (element, start, end, duration) => {
+        const startTime = performance.now();
+        
+        const update = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(start + (end - start) * progress);
+            element.textContent = current.toLocaleString();
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        };
+        
+        requestAnimationFrame(update);
+    };
+    
+    animateStats();
+});
+</script>
+{% endblock %}

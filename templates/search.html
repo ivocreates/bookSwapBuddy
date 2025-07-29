@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Books - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fas fa-search text-primary me-2"></i>Browse Books
+            </h1>
+            <p class="text-muted">
+                Discover academic books from students across India. Use filters to find exactly what you need.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="search-filters mb-4">
+        <form id="search-form" method="GET" action="{{ url_for('books') }}">
+            <div class="row g-3">
+                <div class="col-lg-4 col-md-6">
+                    <label for="search-input" class="form-label">
+                        <i class="fas fa-search me-2"></i>Search Books
+                    </label>
+                    <input type="text" class="form-control filter-input" 
+                           id="search-input" name="search" 
+                           value="{{ request.args.get('search', '') }}"
+                           placeholder="Title, author, or subject...">
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <label for="department-filter" class="form-label">
+                        <i class="fas fa-graduation-cap me-2"></i>Department
+                    </label>
+                    <select class="form-select filter-input" id="department-filter" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if current_filters.department == dept %}selected{% endif %}>
+                            {{ dept }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <label for="condition-filter" class="form-label">
+                        <i class="fas fa-star me-2"></i>Condition
+                    </label>
+                    <select class="form-select filter-input" id="condition-filter" name="condition">
+                        <option value="">All Conditions</option>
+                        {% for condition in conditions %}
+                        <option value="{{ condition }}" {% if current_filters.condition == condition %}selected{% endif %}>
+                            {{ condition }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <label for="swap-type-filter" class="form-label">
+                        <i class="fas fa-tags me-2"></i>Type
+                    </label>
+                    <select class="form-select filter-input" id="swap-type-filter" name="swap_type">
+                        <option value="">All Types</option>
+                        {% for type in swap_types %}
+                        <option value="{{ type }}" {% if current_filters.swap_type == type %}selected{% endif %}>
+                            {{ type.title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-lg-2 col-md-6">
+                    <label for="year-filter" class="form-label">
+                        <i class="fas fa-calendar me-2"></i>Year
+                    </label>
+                    <select class="form-select filter-input" id="year-filter" name="year">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                        <option value="{{ year }}" {% if current_filters.year == year|string %}selected{% endif %}>
+                            Year {{ year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Search Books
+                        </button>
+                        <button type="button" id="clear-filters" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </button>
+                        {% if session.user_id %}
+                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#wishlistModal">
+                            <i class="fas fa-plus me-2"></i>Add to Wishlist
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results Summary -->
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    {% if books.items %}
+                    <p class="text-muted mb-0">
+                        Showing {{ books.items|length }} of {{ books.total }} books
+                        {% if request.args.get('search') %}
+                        for "<strong>{{ request.args.get('search') }}</strong>"
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="View mode selection">
+                        <input type="radio" class="btn-check" name="view-mode" id="grid-view" checked aria-label="Grid view">
+                        <label class="btn btn-outline-primary" for="grid-view" title="Grid View">
+                            <i class="fas fa-th" aria-hidden="true"></i>
+                        </label>
+                        <input type="radio" class="btn-check" name="view-mode" id="list-view" aria-label="List view">
+                        <label class="btn btn-outline-primary" for="list-view" title="List View">
+                            <i class="fas fa-list" aria-hidden="true"></i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="text-center py-4 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading books...</p>
+    </div>
+    
+    <!-- Books Grid -->
+    <div class="row g-4" id="book-grid">
+        {% if books.items %}
+        {% for book in books.items %}
+        <div class="col-lg-4 col-md-6 col-sm-12">
+            <div class="card book-card h-100 shadow-sm">
+                <div class="position-relative">
+                    {% if book.image_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                         class="card-img-top book-image" alt="{{ book.title }}"
+                         loading="lazy">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light book-placeholder">
+                        <i class="fas fa-book fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Status badges -->
+                    {% if book.swap_type == 'free' %}
+                    <span class="position-absolute top-0 end-0 badge bg-success m-2">FREE</span>
+                    {% elif book.swap_type == 'swap' %}
+                    <span class="position-absolute top-0 end-0 badge bg-info m-2">SWAP</span>
+                    {% endif %}
+                    
+                    <!-- Views counter -->
+                    <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 small">
+                        <i class="fas fa-eye me-1"></i>{{ book.views }}
+                    </div>
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title line-clamp-2">{{ book.title }}</h5>
+                    <p class="card-text text-muted small mb-1">by {{ book.author }}</p>
+                    <p class="card-text small mb-2">
+                        <i class="fas fa-bookmark me-1 text-primary"></i>{{ book.subject }}
+                    </p>
+                    <p class="card-text small mb-3">
+                        <i class="fas fa-graduation-cap me-1 text-secondary"></i>{{ book.department }} - Year {{ book.year_of_study }}
+                    </p>
+                    
+                    {% if book.description %}
+                    <p class="card-text small text-muted line-clamp-2 mb-3">{{ book.description }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            {% if book.swap_type == 'sell' %}
+                            <span class="book-price">₹{{ "%.0f"|format(book.price) }}</span>
+                            {% elif book.swap_type == 'free' %}
+                            <span class="book-price text-success">FREE</span>
+                            {% else %}
+                            <span class="book-price text-info">SWAP</span>
+                            {% endif %}
+                            <span class="badge condition-{{ book.condition.lower().replace(' ', '-') }}">
+                                {{ book.condition }}
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('book_detail', id=book.id) }}" 
+                               class="btn btn-primary btn-sm flex-fill">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            {% if session.user_id and session.user_id != book.user_id %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                    onclick="BookSwapBuddy.addToWishlist('{{ book.title }}', '{{ book.author }}', '{{ book.subject }}')"
+                                    title="Add to Wishlist">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Owner info -->
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>{{ book.owner.username }}
+                                <span class="ms-2">
+                                    <i class="fas fa-clock me-1"></i>{{ book.created_at|timeago }}
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                <h4>No books found</h4>
+                <p class="text-muted mb-4">
+                    {% if request.args.get('search') or current_filters.department or current_filters.condition or current_filters.swap_type or current_filters.year %}
+                    Try adjusting your search criteria or removing some filters.
+                    {% else %}
+                    Be the first to add books to this platform!
+                    {% endif %}
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    {% if request.args.get('search') or current_filters.department or current_filters.condition or current_filters.swap_type or current_filters.year %}
+                    <button type="button" id="clear-all-filters" class="btn btn-outline-primary">
+                        <i class="fas fa-times me-2"></i>Clear All Filters
+                    </button>
+                    {% endif %}
+                    {% if session.user_id %}
+                    <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Your First Book
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Join to Add Books
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if books.pages > 1 %}
+    <div class="row mt-5">
+        <div class="col">
+            <nav aria-label="Book pagination" id="pagination-container">
+                <ul class="pagination justify-content-center"><li class="page-item {% if not books.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{% if books.has_prev %}{{ url_for('books', page=books.prev_num, **request.args) }}{% else %}#{% endif %}"
+                           {% if not books.has_prev %}tabindex="-1" aria-disabled="true"{% endif %}>
+                            <i class="fas fa-chevron-left me-1" aria-hidden="true"></i>Previous
+                        </a>
+                    </li>
+                    {% for page_num in books.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != books.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('books', page=page_num, **request.args) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not books.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{% if books.has_next %}{{ url_for('books', page=books.next_num, **request.args) }}{% else %}#{% endif %}"
+                           {% if not books.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
+                            Next<i class="fas fa-chevron-right ms-1" aria-hidden="true"></i>
+                        </a>
+                    </li></ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add to Wishlist Modal -->
+{% if session.user_id %}
+<div class="modal fade" id="wishlistModal" tabindex="-1" aria-labelledby="wishlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="wishlistModalLabel">
+                    <i class="fas fa-heart text-primary me-2"></i>Add to Wishlist
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('add_to_wishlist') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="wishlist_book_title" class="form-label">Book Title *</label>
+                        <input type="text" class="form-control" id="wishlist_book_title" 
+                               name="book_title" required placeholder="Enter the book title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="wishlist_author" class="form-label">Author</label>
+                        <input type="text" class="form-control" id="wishlist_author" 
+                               name="author" placeholder="Author name (optional)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="wishlist_subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="wishlist_subject" 
+                               name="subject" placeholder="Subject or topic (optional)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="wishlist_department" class="form-label">Department</label>
+                        <select class="form-select" id="wishlist_department" name="department">
+                            <option value="">Select department (optional)</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-heart me-2"></i>Add to Wishlist
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+.book-placeholder {
+    height: 200px;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+}
+
+.autocomplete-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8f9fa;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .book-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-filters .row > div {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear all filters
+    document.getElementById('clear-all-filters')?.addEventListener('click', function() {
+        window.location.href = '{{ url_for("books") }}';
+    });
+    
+    // View mode toggle
+    const gridView = document.getElementById('grid-view');
+    const listView = document.getElementById('list-view');
+    const bookGrid = document.getElementById('book-grid');
+    
+    listView?.addEventListener('change', function() {
+        if (this.checked) {
+            bookGrid.classList.add('list-mode');
+        }
+    });
+    
+    gridView?.addEventListener('change', function() {
+        if (this.checked) {
+            bookGrid.classList.remove('list-mode');
+        }
+    });
+    
+    // Lazy loading for images
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    observer.unobserve(img);
+                }
+            });
+        });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+});
+</script>
+{% endblock %}

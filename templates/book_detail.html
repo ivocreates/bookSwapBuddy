@@ -1,0 +1,752 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('books') }}">Browse Books</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ book.title }}</li>
+        </ol>
+    </nav>
+    
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back
+        </a>
+    </div>
+    
+    <!-- Book Details -->
+    <div class="row g-4">
+        <!-- Book Image -->
+        <div class="col-lg-4 col-md-5">
+            <div class="sticky-top" style="top: 2rem;">
+                {% if book.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                     class="img-fluid rounded shadow book-detail-image" alt="{{ book.title }}">
+                {% else %}
+                <div class="book-placeholder-large d-flex align-items-center justify-content-center bg-light rounded shadow">
+                    <i class="fas fa-book fa-5x text-muted" aria-hidden="true"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Quick Actions -->
+                <div class="mt-3 d-grid gap-2">
+                    {% if session.user_id and session.user_id != book.user_id %}
+                    <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#contactModal">
+                        <i class="fas fa-envelope me-2" aria-hidden="true"></i>Contact Owner
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="BookSwapBuddy.addToWishlist('{{ book.title }}', '{{ book.author }}', '{{ book.subject }}')">
+                        <i class="fas fa-heart me-2" aria-hidden="true"></i>Add to Wishlist
+                    </button>
+                    {% elif session.user_id == book.user_id %}
+                    <a href="{{ url_for('edit_book', id=book.id) }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-edit me-2" aria-hidden="true"></i>Edit Book
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" 
+                            data-book-id="{{ book.id }}" 
+                            onclick="BookSwapBuddy.deleteBook(this.getAttribute('data-book-id'))">
+                        <i class="fas fa-trash me-2" aria-hidden="true"></i>Delete Book
+                    </button>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i>Login to Contact
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Share Buttons -->
+                    <div class="btn-group" role="group" aria-label="Share options">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                onclick="BookSwapBuddy.shareBook('{{ book.title }}', '{{ request.url }}')"
+                                title="Share this book">
+                            <i class="fas fa-share-alt" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                onclick="BookSwapBuddy.generateQR('{{ request.url }}')"
+                                title="Generate QR Code">
+                            <i class="fas fa-qrcode" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                onclick="BookSwapBuddy.copyToClipboard('{{ request.url }}')"
+                                title="Copy Link">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Book Stats -->
+                <div class="mt-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <i class="fas fa-eye text-primary fa-lg" aria-hidden="true"></i>
+                                        <div class="fw-bold">{{ book.views }}</div>
+                                        <small class="text-muted">Views</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <i class="fas fa-heart text-danger fa-lg" aria-hidden="true"></i>
+                                        <div class="fw-bold">{{ book.wishlist_count or 0 }}</div>
+                                        <small class="text-muted">Wishlist</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-item">
+                                        <i class="fas fa-clock text-warning fa-lg" aria-hidden="true"></i>
+                                        <div class="fw-bold">{{ book.created_at|timeago }}</div>
+                                        <small class="text-muted">Posted</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Book Information -->
+        <div class="col-lg-8 col-md-7">
+            <!-- Title and Price -->
+            <div class="mb-4">
+                <h1 class="display-6 fw-bold mb-2">{{ book.title }}</h1>
+                <p class="text-muted fs-5 mb-3">by {{ book.author }}</p>
+                
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                    {% if book.swap_type == 'sell' %}
+                    <span class="badge bg-success fs-4 px-3 py-2">₹{{ "%.0f"|format(book.price) }}</span>
+                    {% elif book.swap_type == 'free' %}
+                    <span class="badge bg-primary fs-4 px-3 py-2">FREE</span>
+                    {% else %}
+                    <span class="badge bg-info fs-4 px-3 py-2">SWAP</span>
+                    {% endif %}
+                    
+                    <span class="badge condition-{{ book.condition.lower().replace(' ', '-') }} fs-6">
+                        {{ book.condition }} Condition
+                    </span>
+                    
+                    {% if book.is_available %}
+                    <span class="badge bg-success fs-6">Available</span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-6">Not Available</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Book Details -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-info-circle text-primary me-2" aria-hidden="true"></i>Book Details
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Subject:</dt>
+                                <dd class="col-sm-7">{{ book.subject }}</dd>
+                                
+                                <dt class="col-sm-5">Department:</dt>
+                                <dd class="col-sm-7">{{ book.department }}</dd>
+                                
+                                <dt class="col-sm-5">Year of Study:</dt>
+                                <dd class="col-sm-7">Year {{ book.year_of_study }}</dd>
+                                
+                                {% if book.isbn %}
+                                <dt class="col-sm-5">ISBN:</dt>
+                                <dd class="col-sm-7">{{ book.isbn }}</dd>
+                                {% endif %}
+                                
+                                <dt class="col-sm-5">Language:</dt>
+                                <dd class="col-sm-7">{{ book.language or 'English' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-user text-primary me-2" aria-hidden="true"></i>Owner Information
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar-circle me-3">
+                                    {{ book.owner.username[0].upper() }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ book.owner.username }}</div>
+                                    <small class="text-muted">{{ book.owner.department or 'Student' }}</small>
+                                </div>
+                            </div>
+                            
+                            <dl class="row">
+                                <dt class="col-sm-6">College:</dt>
+                                <dd class="col-sm-6">{{ book.owner.college or 'Not specified' }}</dd>
+                                
+                                <dt class="col-sm-6">Member since:</dt>
+                                <dd class="col-sm-6">{{ book.owner.created_at.strftime('%b %Y') }}</dd>
+                                
+                                <dt class="col-sm-6">Books shared:</dt>
+                                <dd class="col-sm-6">{{ book.owner.books|length }}</dd>
+                                
+                                <dt class="col-sm-6">Rating:</dt>
+                                <dd class="col-sm-6">
+                                    <div class="d-flex align-items-center">
+                                        {% for i in range(5) %}
+                                        <i class="fas fa-star {% if i < (book.owner.rating or 0) %}text-warning{% else %}text-muted{% endif %}" aria-hidden="true"></i>
+                                        {% endfor %}
+                                        <small class="ms-2 text-muted">({{ book.owner.rating or 'New' }})</small>
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            {% if book.description %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-align-left text-primary me-2" aria-hidden="true"></i>Description
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ book.description }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Swap/Sale Information -->
+            {% if book.swap_type == 'swap' and book.preferred_books %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt text-primary me-2" aria-hidden="true"></i>Looking for in Exchange
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ book.preferred_books }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Contact Information -->
+            {% if book.contact_method != 'message' and book.contact_info %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-phone text-primary me-2" aria-hidden="true"></i>Contact Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Preferred Contact:</strong> 
+                        {% if book.contact_method == 'email' %}Email
+                        {% elif book.contact_method == 'phone' %}Phone/WhatsApp
+                        {% elif book.contact_method == 'both' %}Email or Phone
+                        {% endif %}
+                    </p>
+                    {% if session.user_id and session.user_id != book.user_id %}
+                    <p class="mb-0">
+                        <strong>Contact:</strong> 
+                        <span id="contact-info" class="d-none">{{ book.contact_info }}</span>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="BookSwapBuddy.revealContact()">
+                            <i class="fas fa-eye me-1" aria-hidden="true"></i>Reveal Contact Info
+                        </button>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Book Status Management (Owner Only) -->
+            {% if session.user_id == book.user_id %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-cog text-primary me-2" aria-hidden="true"></i>Manage Book Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('mark_book_status', book_id=book.id) }}">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Book Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="available" {% if book.status == 'available' %}selected{% endif %}>Available</option>
+                                <option value="sold" {% if book.status == 'sold' %}selected{% endif %}>Sold</option>
+                                <option value="reserved" {% if book.status == 'reserved' %}selected{% endif %}>Reserved</option>
+                            </select>
+                            <div class="form-text">Update the current status of your book listing.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2" aria-hidden="true"></i>Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Reviews Section -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-star text-warning me-2" aria-hidden="true"></i>Reviews
+                        {% if reviews %}
+                        <span class="badge bg-secondary ms-2">{{ reviews|length }}</span>
+                        {% endif %}
+                    </h6>
+                    {% if avg_rating > 0 %}
+                    <div class="d-flex align-items-center">
+                        <div class="text-warning me-2">
+                            {% for i in range(5) %}
+                            <i class="fas fa-star{% if i >= avg_rating|round %} text-muted{% endif %}" aria-hidden="true"></i>
+                            {% endfor %}
+                        </div>
+                        <span class="small text-muted">{{ "%.1f"|format(avg_rating) }}/5</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if reviews %}
+                    <div class="reviews-list">
+                        {% for review in reviews %}
+                        <div class="review-item border-bottom pb-3 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle me-3">
+                                    {{ review.reviewer.username[0].upper() }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ review.reviewer.username }}</h6>
+                                            <small class="text-muted">{{ review.created_at|timeago }}</small>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="text-warning me-2">
+                                                {% for i in range(5) %}
+                                                <i class="fas fa-star{% if i >= review.rating %} text-muted{% endif %}" aria-hidden="true"></i>
+                                                {% endfor %}
+                                            </div>
+                                            <span class="badge bg-{% if review.transaction_type == 'buy' %}success{% elif review.transaction_type == 'swap' %}primary{% else %}info{% endif %}">
+                                                {{ review.transaction_type.title() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {% if review.review_text %}
+                                    <p class="mb-0">{{ review.review_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Add Review Form -->
+                    {% if can_review %}
+                    <div class="add-review-section {% if reviews %}border-top pt-3{% endif %}">
+                        <h6 class="mb-3">
+                            <i class="fas fa-plus text-primary me-2" aria-hidden="true"></i>Add Your Review
+                        </h6>
+                        <form method="POST" action="{{ url_for('add_review', book_id=book.id) }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="rating" class="form-label">Rating *</label>
+                                    <select class="form-select" id="rating" name="rating" required>
+                                        <option value="">Select Rating</option>
+                                        <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                        <option value="4">⭐⭐⭐⭐ Good</option>
+                                        <option value="3">⭐⭐⭐ Average</option>
+                                        <option value="2">⭐⭐ Poor</option>
+                                        <option value="1">⭐ Very Poor</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="transaction_type" class="form-label">Transaction Type *</label>
+                                    <select class="form-select" id="transaction_type" name="transaction_type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="buy">Purchase</option>
+                                        <option value="swap">Exchange/Swap</option>
+                                        <option value="free">Free Pickup</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="review_text" class="form-label">Review (Optional)</label>
+                                    <textarea class="form-control" id="review_text" name="review_text" 
+                                              rows="3" maxlength="500" 
+                                              placeholder="Share your experience with this book or seller..."></textarea>
+                                    <div class="form-text">Maximum 500 characters</div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-star me-2" aria-hidden="true"></i>Submit Review
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% elif session.user_id == book.user_id %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-info-circle text-muted me-2" aria-hidden="true"></i>
+                        <span class="text-muted">You cannot review your own book.</span>
+                    </div>
+                    {% elif user_review %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle text-success me-2" aria-hidden="true"></i>
+                        <span class="text-muted">You have already reviewed this book.</span>
+                    </div>
+                    {% elif not session.user_id %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-sign-in-alt text-muted me-2" aria-hidden="true"></i>
+                        <span class="text-muted">
+                            <a href="{{ url_for('login') }}" class="text-decoration-none">Login</a> to add a review.
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-info-circle text-muted me-2" aria-hidden="true"></i>
+                        <span class="text-muted">No reviews yet. Be the first to review this book!</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Similar Books -->
+            {% if similar_books %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-book text-primary me-2" aria-hidden="true"></i>Similar Books
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for similar_book in similar_books[:4] %}
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                {% if similar_book.image_filename %}
+                                <img src="{{ url_for('static', filename='uploads/' + similar_book.image_filename) }}" 
+                                     class="flex-shrink-0 me-3 rounded" style="width: 60px; height: 80px; object-fit: cover;" 
+                                     alt="{{ similar_book.title }}">
+                                {% else %}
+                                <div class="flex-shrink-0 me-3 bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 80px;">
+                                    <i class="fas fa-book text-muted" aria-hidden="true"></i>
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1 min-width-0">
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('book_detail', id=similar_book.id) }}" 
+                                           class="text-decoration-none">{{ similar_book.title[:40] }}{% if similar_book.title|length > 40 %}...{% endif %}</a>
+                                    </h6>
+                                    <p class="mb-1 small text-muted">{{ similar_book.author }}</p>
+                                    <p class="mb-0 small">
+                                        {% if similar_book.swap_type == 'sell' %}
+                                        <span class="text-success fw-bold">₹{{ "%.0f"|format(similar_book.price) }}</span>
+                                        {% elif similar_book.swap_type == 'free' %}
+                                        <span class="text-primary fw-bold">FREE</span>
+                                        {% else %}
+                                        <span class="text-info fw-bold">SWAP</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if similar_books|length > 4 %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('books', search=book.subject) }}" class="btn btn-outline-primary btn-sm">
+                            View More Similar Books
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Contact Modal -->
+{% if session.user_id and session.user_id != book.user_id %}
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">
+                    <i class="fas fa-envelope text-primary me-2" aria-hidden="true"></i>Contact {{ book.owner.username }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('send_message') }}" method="POST">
+                <input type="hidden" name="book_id" value="{{ book.id }}">
+                <input type="hidden" name="recipient_id" value="{{ book.user_id }}">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
+                        Sending message about: <strong>{{ book.title }}</strong>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message_subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="message_subject" name="subject" 
+                               value="Interested in: {{ book.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message_content" class="form-label">Message *</label>
+                        <textarea class="form-control" id="message_content" name="content" 
+                                  rows="4" required maxlength="500"
+                                  placeholder="Hi! I'm interested in your book '{{ book.title }}'. Is it still available?"></textarea>
+                        <div class="form-text">
+                            <span id="message-counter">0</span>/500 characters
+                        </div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="include_contact" name="include_contact">
+                        <label class="form-check-label" for="include_contact">
+                            Include my contact information in this message
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">
+                    <i class="fas fa-qrcode text-primary me-2" aria-hidden="true"></i>QR Code
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qr-code-container"></div>
+                <p class="mt-3 small text-muted">Scan to view this book on mobile</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-detail-image {
+    width: 100%;
+    height: auto;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+.book-placeholder-large {
+    width: 100%;
+    height: 400px;
+}
+
+.avatar-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item i {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.condition-excellent {
+    background-color: #198754;
+    color: white;
+}
+
+.condition-good {
+    background-color: #20c997;
+    color: white;
+}
+
+.condition-fair {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.condition-poor {
+    background-color: #dc3545;
+    color: white;
+}
+
+.similar-book-image {
+    width: 60px;
+    height: 80px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .sticky-top {
+        position: static !important;
+    }
+    
+    .book-detail-image {
+        max-height: 300px;
+    }
+    
+    .book-placeholder-large {
+        height: 300px;
+    }
+    
+    .btn-lg {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.min-width-0 {
+    min-width: 0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageContent = document.getElementById('message_content');
+    const messageCounter = document.getElementById('message-counter');
+    
+    // Message character counter
+    if (messageContent && messageCounter) {
+        messageContent.addEventListener('input', function() {
+            const length = this.value.length;
+            messageCounter.textContent = length;
+            
+            if (length > 450) {
+                messageCounter.style.color = '#dc3545';
+            } else if (length > 400) {
+                messageCounter.style.color = '#fd7e14';
+            } else {
+                messageCounter.style.color = '#6c757d';
+            }
+        });
+        
+        // Initialize counter
+        messageCounter.textContent = messageContent.value.length;
+    }
+    
+    // Track page view
+    fetch('{{ url_for("track_view", book_id=book.id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+});
+
+// Add to BookSwapBuddy namespace
+window.BookSwapBuddy = window.BookSwapBuddy || {};
+
+BookSwapBuddy.revealContact = function() {
+    const contactInfo = document.getElementById('contact-info');
+    const button = contactInfo.nextElementSibling;
+    
+    contactInfo.classList.remove('d-none');
+    button.style.display = 'none';
+};
+
+BookSwapBuddy.deleteBook = function(bookId) {
+    if (confirm('Are you sure you want to delete this book? This action cannot be undone.')) {
+        fetch(`/book/${bookId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{{ url_for("dashboard") }}';
+            } else {
+                BookSwapBuddy.showAlert('Error deleting book: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            BookSwapBuddy.showAlert('Error deleting book', 'danger');
+        });
+    }
+};
+
+BookSwapBuddy.shareBook = function(title, url) {
+    if (navigator.share) {
+        navigator.share({
+            title: title + ' - BookSwapBuddy',
+            text: 'Check out this book on BookSwapBuddy',
+            url: url
+        });
+    } else {
+        BookSwapBuddy.copyToClipboard(url);
+    }
+};
+
+BookSwapBuddy.generateQR = function(url) {
+    const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+    const container = document.getElementById('qr-code-container');
+    
+    // Clear previous QR code
+    container.innerHTML = '';
+    
+    // Generate QR code (simplified - in real app, use QR library)
+    const qrText = `QR Code for: ${url}`;
+    container.innerHTML = `
+        <div class="border p-4 bg-light">
+            <i class="fas fa-qrcode fa-5x text-muted"></i>
+            <p class="mt-2 small">QR Code would be generated here</p>
+            <small class="text-muted">${url}</small>
+        </div>
+    `;
+    
+    modal.show();
+};
+
+BookSwapBuddy.copyToClipboard = function(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        BookSwapBuddy.showAlert('Link copied to clipboard!', 'success');
+    }, function() {
+        BookSwapBuddy.showAlert('Failed to copy link', 'danger');
+    });
+};
+</script>
+{% endblock %}

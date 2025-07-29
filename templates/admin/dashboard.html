@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        <i class="fas fa-tachometer-alt text-primary me-2" aria-hidden="true"></i>Admin Dashboard
+                    </h1>
+                    <p class="text-muted">Manage users, books, and platform analytics</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-users me-2"></i>Users
+                    </a>
+                    <a href="{{ url_for('admin_books') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-book me-2"></i>Books
+                    </a>
+                    <a href="{{ url_for('admin_reviews') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-star me-2"></i>Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ stats.total_users }}</h3>
+                            <p class="mb-0 opacity-75">Total Users</p>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ stats.total_books }}</h3>
+                            <p class="mb-0 opacity-75">Total Books</p>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-book fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ stats.available_books }}</h3>
+                            <p class="mb-0 opacity-75">Available Books</p>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h3 class="mb-0">{{ stats.total_messages }}</h3>
+                            <p class="mb-0 opacity-75">Messages</p>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Secondary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="text-muted">{{ stats.sold_books }}</h4>
+                    <p class="mb-0">Books Sold</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="text-muted">{{ stats.total_reviews }}</h4>
+                    <p class="mb-0">Reviews</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="text-muted">{{ stats.pending_transactions }}</h4>
+                    <p class="mb-0">Pending Transactions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content Grid -->
+    <div class="row">
+        <!-- Recent Users -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-plus text-primary me-2"></i>Recent Users
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_users %}
+                    <div class="list-group list-group-flush">
+                        {% for user in recent_users %}
+                        <div class="list-group-item d-flex align-items-center">
+                            <div class="avatar-circle me-3">
+                                {{ user.username[0].upper() }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ user.username }}</h6>
+                                <small class="text-muted">
+                                    {{ user.department }} • {{ user.created_at|timeago }}
+                                </small>
+                            </div>
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No recent users</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm">
+                        View All Users
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Books -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book text-success me-2"></i>Recent Books
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_books %}
+                    <div class="list-group list-group-flush">
+                        {% for book in recent_books %}
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ book.title[:30] }}{% if book.title|length > 30 %}...{% endif %}</h6>
+                                    <p class="mb-1 text-muted">{{ book.author }}</p>
+                                    <small class="text-muted">
+                                        {{ book.owner.username }} • {{ book.created_at|timeago }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{% if book.status == 'available' %}success{% elif book.status == 'sold' %}secondary{% else %}warning{% endif %}">
+                                    {{ book.status }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No recent books</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin_books') }}" class="btn btn-outline-primary btn-sm">
+                        View All Books
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Department Statistics -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-info me-2"></i>Department Stats
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if dept_stats %}
+                    {% for dept, count in dept_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">{{ dept }}</span>
+                        <span class="badge bg-primary">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No department data</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Reviews -->
+    {% if recent_reviews %}
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star text-warning me-2"></i>Recent Reviews
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for review in recent_reviews %}
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0">{{ review.book.title[:25] }}{% if review.book.title|length > 25 %}...{% endif %}</h6>
+                                    <div class="text-warning">
+                                        {% for i in range(5) %}
+                                        <i class="fas fa-star{% if i >= review.rating %} text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    By {{ review.reviewer.username }} • {{ review.created_at|timeago }}
+                                </p>
+                                {% if review.review_text %}
+                                <p class="mb-0 small">{{ review.review_text[:100] }}{% if review.review_text|length > 100 %}...{% endif %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin_reviews') }}" class="btn btn-outline-primary btn-sm">
+                        View All Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.bg-primary { background-color: #ff6b35 !important; }
+.bg-success { background-color: #28a745 !important; }
+.bg-info { background-color: #17a2b8 !important; }
+.bg-warning { background-color: #ffc107 !important; }
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}

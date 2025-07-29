@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - BookSwapBuddy Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        <i class="fas fa-users text-primary me-2" aria-hidden="true"></i>User Management
+                    </h1>
+                    <p class="text-muted">Manage platform users and permissions</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Users</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   placeholder="Username, email, or name" value="{{ search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">All Departments</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept }}" {% if dept == department %}selected{% endif %}>
+                                    {{ dept }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                            <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2"></i>Users
+                        <span class="badge bg-secondary ms-2">{{ users.total }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if users.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Contact</th>
+                                    <th>Academic Info</th>
+                                    <th>Stats</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users.items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3">
+                                                {{ user.username[0].upper() }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">{{ user.full_name }}</h6>
+                                                <small class="text-muted">@{{ user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small class="text-muted d-block">{{ user.email }}</small>
+                                            {% if user.phone %}
+                                            <small class="text-muted">{{ user.phone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small class="text-muted d-block">{{ user.department }}</small>
+                                            <small class="text-muted">Year {{ user.year }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <small class="text-muted d-block">{{ user.books|length }} books</small>
+                                            <small class="text-muted">{{ user.points }} points</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                        {% else %}
+                                        <span class="badge bg-success">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ user.created_at|timeago }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <form method="POST" action="{{ url_for('toggle_user_admin', user_id=user.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                                <button type="submit" class="btn btn-outline-primary" title="Toggle Admin">
+                                                    <i class="fas fa-user-shield"></i>
+                                                </button>
+                                            </form>
+                                            
+                                            {% if user.id != session.user_id %}
+                                            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete User">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No Users Found</h5>
+                        <p class="text-muted">No users match your search criteria.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if users.pages > 1 %}
+                <div class="card-footer">
+                    <nav aria-label="User pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if users.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=search, department=department) }}" 
+                                   title="Previous page" aria-label="Previous page">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% for page_num in users.iter_pages() %}
+                            {% if page_num %}
+                            {% if page_num != users.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_users', page=page_num, search=search, department=department) }}"
+                                   title="Go to page {{ page_num }}" aria-label="Go to page {{ page_num }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link" aria-current="page" aria-label="Current page {{ page_num }}">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-label="Page break">…</span>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if users.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=search, department=department) }}"
+                                   title="Next page" aria-label="Next page">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
+{% endblock %}

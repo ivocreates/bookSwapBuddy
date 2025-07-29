@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1><i class="fas fa-trophy text-warning me-2"></i>Leaderboard</h1>
+                <p class="text-muted">Top contributors to our BookSwapBuddy community</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-star text-warning me-2"></i>Top Points Leaders</h4>
+                </div>
+                <div class="card-body">
+                    {% if top_users %}
+                        <div class="list-group list-group-flush">
+                            {% for user in top_users %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="rank-badge me-3">
+                                        {% if loop.index == 1 %}
+                                            <i class="fas fa-trophy text-warning fs-4"></i>
+                                        {% elif loop.index == 2 %}
+                                            <i class="fas fa-medal text-secondary fs-4"></i>
+                                        {% elif loop.index == 3 %}
+                                            <i class="fas fa-award text-warning fs-4"></i>
+                                        {% else %}
+                                            <span class="badge bg-primary rounded-pill">{{ loop.index }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ user.full_name }}</h6>
+                                        <small class="text-muted">{{ user.department }}, {{ user.college }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success fs-6">{{ user.points or 0 }} pts</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No users found yet. Be the first to earn points!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-book text-primary me-2"></i>Top Book Contributors</h4>
+                </div>
+                <div class="card-body">
+                    {% if top_contributors %}
+                        <div class="list-group list-group-flush">
+                            {% for user, book_count in top_contributors %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="rank-badge me-3">
+                                        {% if loop.index == 1 %}
+                                            <i class="fas fa-trophy text-warning fs-4"></i>
+                                        {% elif loop.index == 2 %}
+                                            <i class="fas fa-medal text-secondary fs-4"></i>
+                                        {% elif loop.index == 3 %}
+                                            <i class="fas fa-award text-warning fs-4"></i>
+                                        {% else %}
+                                            <span class="badge bg-primary rounded-pill">{{ loop.index }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ user.full_name }}</h6>
+                                        <small class="text-muted">{{ user.department }}, {{ user.college }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary fs-6">{{ book_count }} books</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No book contributors found yet. Be the first to add books!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-info-circle text-info me-2"></i>How Points Work</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-plus text-success me-2"></i>Earn Points For:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-book me-2 text-primary"></i>Adding a new book: <strong>+10 points</strong></li>
+                                <li><i class="fas fa-handshake me-2 text-success"></i>Successful book exchange: <strong>+25 points</strong></li>
+                                <li><i class="fas fa-heart me-2 text-danger"></i>Book added to wishlist: <strong>+5 points</strong></li>
+                                <li><i class="fas fa-eye me-2 text-info"></i>Book viewed by others: <strong>+1 point</strong></li>
+                                <li><i class="fas fa-comments me-2 text-warning"></i>Responding to messages: <strong>+2 points</strong></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-star text-warning me-2"></i>Benefits of High Points:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-crown me-2 text-warning"></i>Leaderboard recognition</li>
+                                <li><i class="fas fa-bolt me-2 text-primary"></i>Priority in book recommendations</li>
+                                <li><i class="fas fa-gift me-2 text-success"></i>Special badges and achievements</li>
+                                <li><i class="fas fa-users me-2 text-info"></i>Community trust and reputation</li>
+                                <li><i class="fas fa-medal me-2 text-secondary"></i>Monthly top contributor rewards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5><i class="fas fa-rocket text-primary me-2"></i>Want to climb the leaderboard?</h5>
+                    <p class="mb-3">Start by adding your books and helping fellow students!</p>
+                    <a href="{{ url_for('add_book') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-2"></i>Add Your First Book
+                    </a>
+                    <a href="{{ url_for('books') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-2"></i>Browse Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rank-badge {
+    width: 50px;
+    text-align: center;
+}
+
+.list-group-item:nth-child(1) {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    border-left: 5px solid #ffd700;
+}
+
+.list-group-item:nth-child(2) {
+    background: linear-gradient(135deg, #c0c0c0, #e5e5e5);
+    border-left: 5px solid #c0c0c0;
+}
+
+.list-group-item:nth-child(3) {
+    background: linear-gradient(135deg, #cd7f32, #daa520);
+    border-left: 5px solid #cd7f32;
+}
+</style>
+{% endblock %}

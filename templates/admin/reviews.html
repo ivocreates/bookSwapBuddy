@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Review Management - BookSwapBuddy Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        <i class="fas fa-star text-primary me-2" aria-hidden="true"></i>Review Management
+                    </h1>
+                    <p class="text-muted">Monitor user reviews and ratings</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="rating" class="form-label">Filter by Rating</label>
+                            <select class="form-select" id="rating" name="rating">
+                                <option value="">All Ratings</option>
+                                <option value="5" {% if rating == '5' %}selected{% endif %}>⭐⭐⭐⭐⭐ (5 stars)</option>
+                                <option value="4" {% if rating == '4' %}selected{% endif %}>⭐⭐⭐⭐ (4 stars)</option>
+                                <option value="3" {% if rating == '3' %}selected{% endif %}>⭐⭐⭐ (3 stars)</option>
+                                <option value="2" {% if rating == '2' %}selected{% endif %}>⭐⭐ (2 stars)</option>
+                                <option value="1" {% if rating == '1' %}selected{% endif %}>⭐ (1 star)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-2" aria-hidden="true"></i>Filter
+                            </button>
+                            <a href="{{ url_for('admin_reviews') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2" aria-hidden="true"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reviews -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2" aria-hidden="true"></i>Reviews
+                        <span class="badge bg-secondary ms-2">{{ reviews.total }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if reviews.items %}
+                    <div class="row">
+                        {% for review in reviews.items %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card border">
+                                <div class="card-header d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ review.book.title }}</h6>
+                                        <small class="text-muted">by {{ review.book.author }}</small>
+                                    </div>
+                                    <div class="text-warning">
+                                        {% for i in range(5) %}
+                                        <i class="fas fa-star{% if i >= review.rating %} text-muted{% endif %}" aria-hidden="true"></i>
+                                        {% endfor %}
+                                        <span class="ms-1 small text-muted">({{ review.rating }}/5)</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="avatar-circle me-3">
+                                            {{ review.reviewer.username[0].upper() }}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">{{ review.reviewer.username }}</h6>
+                                            <small class="text-muted">{{ review.reviewer.full_name }}</small>
+                                        </div>
+                                        <small class="text-muted">{{ review.created_at|timeago }}</small>
+                                    </div>
+                                    
+                                    {% if review.review_text %}
+                                    <blockquote class="blockquote mb-3">
+                                        <p class="mb-0">"{{ review.review_text }}"</p>
+                                    </blockquote>
+                                    {% endif %}
+                                    
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Transaction</small>
+                                            <span class="badge bg-{% if review.transaction_type == 'buy' %}success{% elif review.transaction_type == 'swap' %}primary{% else %}info{% endif %}">
+                                                {{ review.transaction_type.title() }}
+                                            </span>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Seller</small>
+                                            <strong>{{ review.seller.username }}</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Book Views</small>
+                                            <strong>{{ review.book.views or 0 }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <a href="{{ url_for('book_detail', id=review.book.id) }}" 
+                                       class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-book me-2" aria-hidden="true"></i>View Book
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-star fa-3x text-muted mb-3" aria-hidden="true"></i>
+                        <h5>No Reviews Found</h5>
+                        <p class="text-muted">No reviews match your filter criteria.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if reviews.pages > 1 %}
+                <div class="card-footer">
+                    <nav aria-label="Review pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if reviews.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_reviews', page=reviews.prev_num, rating=rating) }}"
+                                   title="Previous page" aria-label="Previous page">
+                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% for page_num in reviews.iter_pages() %}
+                            {% if page_num %}
+                            {% if page_num != reviews.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_reviews', page=page_num, rating=rating) }}"
+                                   title="Go to page {{ page_num }}" aria-label="Go to page {{ page_num }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link" aria-current="page" aria-label="Current page {{ page_num }}">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-label="Page break">…</span>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if reviews.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_reviews', page=reviews.next_num, rating=rating) }}"
+                                   title="Next page" aria-label="Next page">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #ff6b35, #f7931e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.blockquote {
+    border-left: 3px solid #ff6b35;
+    padding-left: 1rem;
+    font-style: italic;
+}
+
+.text-warning .fa-star.text-muted {
+    color: #dee2e6 !important;
+}
+</style>
+{% endblock %}

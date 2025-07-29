@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        Welcome back, {{ user.full_name }}! 👋
+                    </h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>{{ user.department }} - Year {{ user.year }}
+                        <span class="ms-3"><i class="fas fa-university me-2"></i>{{ user.college }}</span>
+                    </p>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-primary fs-6 p-2">
+                        <i class="fas fa-star me-1"></i>{{ user.points }} Points
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-book fa-2x"></i>
+                    </div>
+                    <h3 class="mb-1">{{ stats.books_listed }}</h3>
+                    <p class="text-muted mb-0">Books Listed</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-handshake fa-2x"></i>
+                    </div>
+                    <h3 class="mb-1">{{ stats.books_sold }}</h3>
+                    <p class="text-muted mb-0">Books Sold</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-envelope fa-2x"></i>
+                    </div>
+                    <h3 class="mb-1">{{ stats.unread_messages }}</h3>
+                    <p class="text-muted mb-0">New Messages</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-heart fa-2x"></i>
+                    </div>
+                    <h3 class="mb-1">{{ stats.wishlist_items }}</h3>
+                    <p class="text-muted mb-0">Wishlist Items</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
+                    </h5>
+                    <div class="row g-2">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{{ url_for('add_book') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-plus me-2"></i>Add Book
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{{ url_for('books') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search me-2"></i>Browse Books
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-envelope me-2"></i>Messages
+                                {% if stats.unread_messages > 0 %}
+                                <span class="badge bg-danger">{{ stats.unread_messages }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{{ url_for('wishlist') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-heart me-2"></i>Wishlist
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- My Books -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-books text-primary me-2"></i>My Books
+                    </h5>
+                    {% if user_books %}
+                    <a href="{{ url_for('add_book') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add New Book
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if user_books %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Condition</th>
+                                    <th>Type</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Views</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in user_books[:5] %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if book.image_filename %}
+                                            <img src="{{ url_for('static', filename='uploads/' + book.image_filename) }}" 
+                                                 class="rounded me-2" width="40" height="40" 
+                                                 style="object-fit: cover;" alt="{{ book.title }}">
+                                            {% else %}
+                                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-book text-muted"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ book.title }}</strong><br>
+                                                <small class="text-muted">by {{ book.author }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge condition-{{ book.condition.lower().replace(' ', '-') }}">
+                                            {{ book.condition }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge swap-{{ book.swap_type }}">
+                                            {{ book.swap_type.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if book.swap_type == 'sell' %}
+                                        <strong>₹{{ "%.0f"|format(book.price) }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if book.status == 'available' %}
+                                        <span class="badge bg-success">Available</span>
+                                        {% elif book.status == 'sold' %}
+                                        <span class="badge bg-secondary">Sold</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Reserved</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-eye text-muted me-1"></i>{{ book.views }}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('book_detail', id=book.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                    onclick="showQRCode({{ book.id }})" title="Show QR Code">
+                                                <i class="fas fa-qrcode"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if user_books|length > 5 %}
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-primary">View All My Books</a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h5>No books listed yet</h5>
+                        <p class="text-muted">Start by adding your first book to the platform!</p>
+                        <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Your First Book
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recent Messages -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-envelope text-primary me-2"></i>Recent Messages
+                    </h6>
+                    <a href="{{ url_for('messages') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_messages %}
+                    {% for message in recent_messages %}
+                    <div class="d-flex align-items-start p-3 border-bottom">
+                        <div class="me-3">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong class="small">{{ message.sender.full_name }}</strong>
+                                <small class="text-muted">{{ message.created_at|timeago }}</small>
+                            </div>
+                            <p class="mb-0 small text-muted">{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</p>
+                            {% if message.book %}
+                            <small class="text-primary">Re: {{ message.book.title }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No messages yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Wishlist -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-heart text-primary me-2"></i>My Wishlist
+                    </h6>
+                    <a href="{{ url_for('wishlist') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if wishlist %}
+                    {% for item in wishlist[:3] %}
+                    <div class="d-flex align-items-center p-3 border-bottom">
+                        <div class="me-3">
+                            <i class="fas fa-book text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <strong class="small">{{ item.book_title }}</strong>
+                            {% if item.author %}
+                            <p class="mb-0 text-muted small">by {{ item.author }}</p>
+                            {% endif %}
+                            <small class="text-muted">Added {{ item.created_at|timeago }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-heart-broken fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No wishlist items</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Profile Completion -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-user-check text-primary me-2"></i>Profile Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set completion = 0 %}
+                    {% if user.full_name %}{% set completion = completion + 20 %}{% endif %}
+                    {% if user.email %}{% set completion = completion + 20 %}{% endif %}
+                    {% if user.college %}{% set completion = completion + 20 %}{% endif %}
+                    {% if user.department %}{% set completion = completion + 20 %}{% endif %}
+                    {% if user.phone %}{% set completion = completion + 20 %}{% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">Profile Completion</span>
+                        <span class="small fw-bold">{{ completion }}%</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ completion }}%"></div>
+                    </div>
+                    
+                    {% if completion < 100 %}
+                    <p class="small text-muted mb-2">Complete your profile to improve trust and visibility:</p>
+                    <ul class="small text-muted mb-3">
+                        {% if not user.phone %}<li>Add phone number</li>{% endif %}
+                    </ul>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrModalLabel">
+                    <i class="fas fa-qrcode me-2"></i>Book QR Code
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center" id="qrModalBody">
+                <!-- QR code will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showQRCode(bookId) {
+    // Show loading in modal
+    document.getElementById('qrModalBody').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Generating QR Code...</p>
+        </div>
+    `;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+    modal.show();
+    
+    // Simulate QR code loading (in real app, this would fetch from server)
+    setTimeout(() => {
+        document.getElementById('qrModalBody').innerHTML = `
+            <div class="qr-code-container">
+                <div class="bg-light rounded p-4 mb-3 d-inline-block">
+                    <i class="fas fa-qrcode fa-5x text-primary"></i>
+                </div>
+                <h6>QR Code for Book Verification</h6>
+                <p class="text-muted small">
+                    Show this QR code during the book exchange to verify authenticity.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-primary btn-sm">
+                        <i class="fas fa-download me-1"></i>Download
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-share me-1"></i>Share
+                    </button>
+                </div>
+            </div>
+        `;
+    }, 1000);
+}
+
+// Update stats animation
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate numbers
+    const animateNumber = (element, start, end, duration) => {
+        const startTime = performance.now();
+        
+        const update = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const current = Math.floor(start + (end - start) * progress);
+            element.textContent = current;
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        };
+        
+        requestAnimationFrame(update);
+    };
+    
+    // Animate dashboard stats
+    const statsElements = document.querySelectorAll('.card-body h3');
+    statsElements.forEach(el => {
+        const finalValue = parseInt(el.textContent);
+        if (!isNaN(finalValue)) {
+            animateNumber(el, 0, finalValue, 1000);
+        }
+    });
+});
+</script>
+{% endblock %}

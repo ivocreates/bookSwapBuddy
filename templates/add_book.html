@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center mb-3">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Dashboard
+                </a>
+                <h1 class="display-6 fw-bold mb-0">
+                    <i class="fas fa-plus text-primary me-2" aria-hidden="true"></i>Add New Book
+                </h1>
+            </div>
+            <p class="text-muted">
+                Share your academic books with fellow students. Fill in the details below to list your book.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Add Book Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book me-2" aria-hidden="true"></i>Book Information
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('add_book') }}" method="POST" enctype="multipart/form-data" id="add-book-form">
+                        <!-- Book Details Section -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="title" class="form-label">Book Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       required maxlength="200" 
+                                       placeholder="Enter the complete book title">
+                                <div class="form-text">Include edition if applicable</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="author" class="form-label">Author *</label>
+                                <input type="text" class="form-control" id="author" name="author" 
+                                       required maxlength="100"
+                                       placeholder="Author name">
+                                <div class="form-text">Primary author or editor</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <input type="text" class="form-control" id="subject" name="subject" 
+                                       required maxlength="100"
+                                       placeholder="Subject or course name">
+                                <div class="form-text">e.g., Data Structures, Organic Chemistry</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="isbn" class="form-label">ISBN (Optional)</label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" 
+                                       maxlength="20" pattern="[0-9\-X]+"
+                                       placeholder="ISBN-10 or ISBN-13">
+                                <div class="form-text">Helps others verify the exact edition</div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="3" maxlength="500"
+                                          placeholder="Brief description of the book content, condition notes, or any additional information..."></textarea>
+                                <div class="form-text">
+                                    <span id="description-counter">0</span>/500 characters
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Academic Information Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-graduation-cap text-primary me-2" aria-hidden="true"></i>Academic Information
+                        </h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department *</label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select your department</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Chemical Engineering">Chemical Engineering</option>
+                                    <option value="Biotechnology">Biotechnology</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Business Administration">Business Administration</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Economics">Economics</option>
+                                    <option value="English Literature">English Literature</option>
+                                    <option value="History">History</option>
+                                    <option value="Psychology">Psychology</option>
+                                    <option value="Medicine">Medicine</option>
+                                    <option value="Pharmacy">Pharmacy</option>
+                                    <option value="Law">Law</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="year_of_study" class="form-label">Year of Study *</label>
+                                <select class="form-select" id="year_of_study" name="year_of_study" required>
+                                    <option value="">Select year</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                    <option value="5">5th Year (if applicable)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Book Condition and Pricing Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-tags text-primary me-2" aria-hidden="true"></i>Condition & Pricing
+                        </h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="condition" class="form-label">Book Condition *</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="">Select condition</option>
+                                    <option value="Excellent">Excellent - Like new, no marks</option>
+                                    <option value="Good">Good - Minor wear, readable</option>
+                                    <option value="Fair">Fair - Noticeable wear, still usable</option>
+                                    <option value="Poor">Poor - Heavy wear, but complete</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="swap_type" class="form-label">Listing Type *</label>
+                                <select class="form-select" id="swap_type" name="swap_type" required>
+                                    <option value="">Select type</option>
+                                    <option value="free">Free - Give away for free</option>
+                                    <option value="swap">Swap - Exchange for another book</option>
+                                    <option value="sell">Sell - Sell for money</option>
+                                </select>
+                                <div class="form-text">Choose how you want to share this book</div>
+                            </div>
+                            
+                            <div class="col-md-6" id="price-section">
+                                <label for="price" class="form-label">Price (₹) *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="price" name="price" 
+                                           min="1" max="10000" step="1"
+                                           placeholder="Enter price">
+                                </div>
+                                <div class="form-text">Set a fair price based on condition</div>
+                            </div>
+                            
+                            <div class="col-md-6" id="preferred-books-section">
+                                <label for="preferred_books" class="form-label">Preferred Books for Swap</label>
+                                <input type="text" class="form-control" id="preferred_books" name="preferred_books" 
+                                       maxlength="200"
+                                       placeholder="Books you'd like in exchange">
+                                <div class="form-text">Specify subjects or titles you're looking for</div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Book Image Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-camera text-primary me-2" aria-hidden="true"></i>Book Image
+                        </h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="image" class="form-label">Upload Book Photo</label>
+                                <input type="file" class="form-control" id="image" name="image" 
+                                       accept="image/*">
+                                <div class="form-text">
+                                    JPG, PNG, or GIF. Max 5MB. Books with photos get more responses!
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div id="image-preview" class="border rounded p-3 text-center">
+                                    <img id="preview-img" src="" alt="Book preview" class="img-fluid">
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="remove-image">
+                                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Remove Image
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="image-placeholder" class="border rounded p-3 text-center text-muted">
+                                    <i class="fas fa-image fa-3x mb-2" aria-hidden="true"></i>
+                                    <p class="mb-0">Image preview will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Contact Information Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-phone text-primary me-2" aria-hidden="true"></i>Contact Information
+                        </h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="contact_method" class="form-label">Preferred Contact Method *</label>
+                                <select class="form-select" id="contact_method" name="contact_method" required>
+                                    <option value="">Select contact method</option>
+                                    <option value="message">Platform Messages Only</option>
+                                    <option value="email">Email</option>
+                                    <option value="phone">Phone/WhatsApp</option>
+                                    <option value="both">Both Email and Phone</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6" id="contact-info-section">
+                                <label for="contact_info" class="form-label">Contact Details</label>
+                                <input type="text" class="form-control" id="contact_info" name="contact_info" 
+                                       maxlength="100"
+                                       placeholder="Email or phone number">
+                                <div class="form-text">This will be visible to interested students</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Terms and Submit -->
+                        <div class="mt-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree that the information provided is accurate and I will respond to genuine inquiries about this book. *
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="notifications" name="notifications">
+                                <label class="form-check-label" for="notifications">
+                                    Send me notifications when someone is interested in this book
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="mt-4 d-flex flex-wrap gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2" aria-hidden="true"></i>Add Book
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg" id="save-draft">
+                                <i class="fas fa-save me-2" aria-hidden="true"></i>Save Draft
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2" aria-hidden="true"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tips Card -->
+    <div class="row mt-4 justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2" aria-hidden="true"></i>Tips for Better Response
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Use clear, high-quality photos
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Write detailed descriptions
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Be honest about condition
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Set fair, competitive prices
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Respond promptly to inquiries
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2" aria-hidden="true"></i>
+                                    Include ISBN when available
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+#image-preview img {
+    border-radius: 0.375rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+#price-section,
+#preferred-books-section,
+#contact-info-section,
+#image-preview {
+    display: none;
+}
+
+#preview-img {
+    max-height: 150px;
+}
+
+.form-text {
+    font-size: 0.875rem;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .btn-lg {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.was-validated .form-control:valid {
+    border-color: #198754;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.94-.94 2.94 2.94L8.08 6.73l.94.94L6.08 10.61z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.was-validated .form-control:invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4M7.2 4.6l-1.4 1.4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('add-book-form');
+    const swapTypeSelect = document.getElementById('swap_type');
+    const priceSection = document.getElementById('price-section');
+    const preferredBooksSection = document.getElementById('preferred-books-section');
+    const contactMethodSelect = document.getElementById('contact_method');
+    const contactInfoSection = document.getElementById('contact-info-section');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const imagePlaceholder = document.getElementById('image-placeholder');
+    const previewImg = document.getElementById('preview-img');
+    const removeImageBtn = document.getElementById('remove-image');
+    const descriptionTextarea = document.getElementById('description');
+    const descriptionCounter = document.getElementById('description-counter');
+    
+    // Show/hide price section based on swap type
+    swapTypeSelect.addEventListener('change', function() {
+        const swapType = this.value;
+        
+        if (swapType === 'sell') {
+            priceSection.style.display = 'block';
+            document.getElementById('price').required = true;
+            preferredBooksSection.style.display = 'none';
+            document.getElementById('preferred_books').required = false;
+        } else if (swapType === 'swap') {
+            priceSection.style.display = 'none';
+            document.getElementById('price').required = false;
+            preferredBooksSection.style.display = 'block';
+        } else {
+            priceSection.style.display = 'none';
+            preferredBooksSection.style.display = 'none';
+            document.getElementById('price').required = false;
+            document.getElementById('preferred_books').required = false;
+        }
+    });
+    
+    // Show/hide contact info section
+    contactMethodSelect.addEventListener('change', function() {
+        const contactMethod = this.value;
+        
+        if (contactMethod === 'email' || contactMethod === 'phone' || contactMethod === 'both') {
+            contactInfoSection.style.display = 'block';
+            document.getElementById('contact_info').required = true;
+        } else {
+            contactInfoSection.style.display = 'none';
+            document.getElementById('contact_info').required = false;
+        }
+    });
+    
+    // Image preview
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+                imagePlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagePreview.style.display = 'none';
+            imagePlaceholder.style.display = 'block';
+        }
+    });
+    
+    // Remove image
+    removeImageBtn.addEventListener('click', function() {
+        imageInput.value = '';
+        imagePreview.style.display = 'none';
+        imagePlaceholder.style.display = 'block';
+    });
+    
+    // Description character counter
+    descriptionTextarea.addEventListener('input', function() {
+        const length = this.value.length;
+        descriptionCounter.textContent = length;
+        
+        if (length > 450) {
+            descriptionCounter.style.color = '#dc3545';
+        } else if (length > 400) {
+            descriptionCounter.style.color = '#fd7e14';
+        } else {
+            descriptionCounter.style.color = '#6c757d';
+        }
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
+    
+    // Save draft functionality
+    document.getElementById('save-draft').addEventListener('click', function() {
+        const formData = new FormData(form);
+        formData.append('is_draft', 'true');
+        
+        fetch('{{ url_for("add_book") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                BookSwapBuddy.showAlert('Draft saved successfully!', 'success');
+            } else {
+                BookSwapBuddy.showAlert('Error saving draft: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            BookSwapBuddy.showAlert('Error saving draft', 'danger');
+        });
+    });
+    
+    // Auto-save form data to localStorage
+    const formInputs = form.querySelectorAll('input, select, textarea');
+    formInputs.forEach(input => {
+        // Load saved value
+        const savedValue = localStorage.getItem(`add_book_${input.name}`);
+        if (savedValue && input.type !== 'file') {
+            input.value = savedValue;
+            
+            // Trigger change events to show/hide sections
+            if (input.name === 'swap_type' || input.name === 'contact_method') {
+                input.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        // Save value on change
+        input.addEventListener('change', function() {
+            if (this.type !== 'file') {
+                localStorage.setItem(`add_book_${this.name}`, this.value);
+            }
+        });
+    });
+    
+    // Clear saved data on successful submit
+    form.addEventListener('submit', function() {
+        if (form.checkValidity()) {
+            formInputs.forEach(input => {
+                localStorage.removeItem(`add_book_${input.name}`);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

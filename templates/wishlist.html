@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist - BookSwapBuddy{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">
+                        <i class="fas fa-heart text-danger me-2" aria-hidden="true"></i>My Wishlist
+                    </h1>
+                    <p class="text-muted">Books you're looking for. We'll notify you when they become available.</p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWishlistModal">
+                        <i class="fas fa-plus me-2" aria-hidden="true"></i>Add to Wishlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wishlist Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-heart fa-2x text-danger mb-2" aria-hidden="true"></i>
+                    <h5 class="card-title">{{ wishlist_items|length }}</h5>
+                    <p class="card-text text-muted">Total Items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2" aria-hidden="true"></i>
+                    <h5 class="card-title">{{ matches_count or 0 }}</h5>
+                    <p class="card-text text-muted">Matches Found</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-2x text-warning mb-2" aria-hidden="true"></i>
+                    <h5 class="card-title">{{ recent_items_count or 0 }}</h5>
+                    <p class="card-text text-muted">Added This Week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-bell fa-2x text-info mb-2" aria-hidden="true"></i>
+                    <h5 class="card-title">{{ notifications_count or 0 }}</h5>
+                    <p class="card-text text-muted">Notifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wishlist Items -->
+    {% if wishlist_items %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2" aria-hidden="true"></i>Your Wishlist Items
+                    </h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="sort-order" id="sort-newest" checked>
+                        <label class="btn btn-outline-secondary" for="sort-newest">Newest</label>
+                        <input type="radio" class="btn-check" name="sort-order" id="sort-oldest">
+                        <label class="btn btn-outline-secondary" for="sort-oldest">Oldest</label>
+                        <input type="radio" class="btn-check" name="sort-order" id="sort-matches">
+                        <label class="btn btn-outline-secondary" for="sort-matches">Matches</label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="wishlist-items">
+                        {% for item in wishlist_items %}
+                        <div class="wishlist-item border-bottom p-3" data-created="{{ item.created_at.timestamp() }}" data-matches="{{ item.matches_count or 0 }}">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="d-flex align-items-start">
+                                        <div class="wishlist-icon me-3">
+                                            <i class="fas fa-book fa-2x text-primary" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">{{ item.book_title }}</h6>
+                                            {% if item.author %}
+                                            <p class="mb-1 text-muted">by {{ item.author }}</p>
+                                            {% endif %}
+                                            {% if item.subject %}
+                                            <p class="mb-1 small">
+                                                <i class="fas fa-bookmark me-1 text-secondary" aria-hidden="true"></i>{{ item.subject }}
+                                            </p>
+                                            {% endif %}
+                                            {% if item.department %}
+                                            <p class="mb-1 small">
+                                                <i class="fas fa-graduation-cap me-1 text-secondary" aria-hidden="true"></i>{{ item.department }}
+                                            </p>
+                                            {% endif %}
+                                            <p class="mb-0 small text-muted">
+                                                <i class="fas fa-clock me-1" aria-hidden="true"></i>Added {{ item.created_at|timeago }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <div class="mb-2">
+                                        {% if item.matches_count and item.matches_count > 0 %}
+                                        <span class="badge bg-success mb-2">{{ item.matches_count }} Match{{ 'es' if item.matches_count > 1 else '' }} Found</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary mb-2">No Matches Yet</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="btn-group-vertical btn-group-sm d-grid gap-1">
+                                        {% if item.matches_count and item.matches_count > 0 %}
+                                        <a href="{{ url_for('books', search=item.book_title) }}" class="btn btn-success btn-sm">
+                                            <i class="fas fa-eye me-1" aria-hidden="true"></i>View Matches
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('books', search=item.book_title) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-search me-1" aria-hidden="true"></i>Search Books
+                                        </a>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                data-bs-toggle="modal" data-bs-target="#editWishlistModal"
+                                                data-item-id="{{ item.id }}"
+                                                data-title="{{ item.book_title }}"
+                                                data-author="{{ item.author or '' }}"
+                                                data-subject="{{ item.subject or '' }}"
+                                                data-department="{{ item.department or '' }}"
+                                                onclick="BookSwapBuddy.editWishlistItem(this)">
+                                            <i class="fas fa-edit me-1" aria-hidden="true"></i>Edit
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                data-item-id="{{ item.id }}"
+                                                onclick="BookSwapBuddy.removeWishlistItem(this.getAttribute('data-item-id'))">
+                                            <i class="fas fa-trash me-1" aria-hidden="true"></i>Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-bolt text-primary me-2" aria-hidden="true"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWishlistModal">
+                            <i class="fas fa-plus me-2" aria-hidden="true"></i>Add New Item
+                        </button>
+                        <a href="{{ url_for('books') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2" aria-hidden="true"></i>Browse All Books
+                        </a>
+                        <button type="button" class="btn btn-outline-info" onclick="BookSwapBuddy.checkAllMatches()">
+                            <i class="fas fa-sync me-2" aria-hidden="true"></i>Check for New Matches
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Popular Searches -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-fire text-primary me-2" aria-hidden="true"></i>Popular Books in Demand
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if popular_wishlist_items %}
+                    <div class="list-group list-group-flush">
+                        {% for item in popular_wishlist_items[:5] %}
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ item.book_title[:30] }}{% if item.book_title|length > 30 %}...{% endif %}</h6>
+                                    {% if item.author %}
+                                    <small class="text-muted">{{ item.author }}</small>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-primary">{{ item.count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No trending books yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb text-primary me-2" aria-hidden="true"></i>Wishlist Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="fas fa-check-circle text-success me-2 mt-1" aria-hidden="true"></i>
+                        <small>Be specific with book titles and authors for better matches</small>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="fas fa-check-circle text-success me-2 mt-1" aria-hidden="true"></i>
+                        <small>Include department and subject to filter relevant books</small>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="fas fa-check-circle text-success me-2 mt-1" aria-hidden="true"></i>
+                        <small>Check for matches regularly as new books are added daily</small>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-check-circle text-success me-2 mt-1" aria-hidden="true"></i>
+                        <small>Enable notifications to get instant alerts for matches</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-heart fa-4x text-muted mb-4" aria-hidden="true"></i>
+                    <h4>Your Wishlist is Empty</h4>
+                    <p class="text-muted mb-4">Add books you're looking for and we'll notify you when they become available.</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWishlistModal">
+                            <i class="fas fa-plus me-2" aria-hidden="true"></i>Add Your First Book
+                        </button>
+                        <a href="{{ url_for('books') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2" aria-hidden="true"></i>Browse Available Books
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add to Wishlist Modal -->
+<div class="modal fade" id="addWishlistModal" tabindex="-1" aria-labelledby="addWishlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addWishlistModalLabel">
+                    <i class="fas fa-plus text-primary me-2" aria-hidden="true"></i>Add to Wishlist
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('add_to_wishlist') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add_book_title" class="form-label">Book Title *</label>
+                        <input type="text" class="form-control" id="add_book_title" name="book_title" 
+                               required maxlength="200" placeholder="Enter the book title">
+                        <div class="form-text">Be as specific as possible for better matches</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_author" class="form-label">Author</label>
+                        <input type="text" class="form-control" id="add_author" name="author" 
+                               maxlength="100" placeholder="Author name (optional)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="add_subject" name="subject" 
+                               maxlength="100" placeholder="Subject or course name (optional)">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="add_department" class="form-label">Department</label>
+                        <select class="form-select" id="add_department" name="department">
+                            <option value="">Select department (optional)</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Chemical Engineering">Chemical Engineering</option>
+                            <option value="Biotechnology">Biotechnology</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Business Administration">Business Administration</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Economics">Economics</option>
+                            <option value="English Literature">English Literature</option>
+                            <option value="History">History</option>
+                            <option value="Psychology">Psychology</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Pharmacy">Pharmacy</option>
+                            <option value="Law">Law</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="add_notifications" name="notifications" checked>
+                        <label class="form-check-label" for="add_notifications">
+                            Notify me when matching books are found
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-heart me-2" aria-hidden="true"></i>Add to Wishlist
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Wishlist Item Modal -->
+<div class="modal fade" id="editWishlistModal" tabindex="-1" aria-labelledby="editWishlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editWishlistModalLabel">
+                    <i class="fas fa-edit text-primary me-2" aria-hidden="true"></i>Edit Wishlist Item
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('edit_wishlist_item') }}" method="POST">
+                <input type="hidden" id="edit_item_id" name="item_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_book_title" class="form-label">Book Title *</label>
+                        <input type="text" class="form-control" id="edit_book_title" name="book_title" 
+                               required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_author" class="form-label">Author</label>
+                        <input type="text" class="form-control" id="edit_author" name="author" maxlength="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="edit_subject" name="subject" maxlength="100">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_department" class="form-label">Department</label>
+                        <select class="form-select" id="edit_department" name="department">
+                            <option value="">Select department (optional)</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Chemical Engineering">Chemical Engineering</option>
+                            <option value="Biotechnology">Biotechnology</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="Chemistry">Chemistry</option>
+                            <option value="Business Administration">Business Administration</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Economics">Economics</option>
+                            <option value="English Literature">English Literature</option>
+                            <option value="History">History</option>
+                            <option value="Psychology">Psychology</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Pharmacy">Pharmacy</option>
+                            <option value="Law">Law</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit_notifications" name="notifications">
+                        <label class="form-check-label" for="edit_notifications">
+                            Notify me when matching books are found
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2" aria-hidden="true"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.wishlist-item {
+    transition: background-color 0.2s ease;
+}
+
+.wishlist-item:hover {
+    background-color: #f8f9fa;
+}
+
+.wishlist-icon {
+    width: 50px;
+    text-align: center;
+}
+
+.stat-card {
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.list-group-item {
+    border: none;
+}
+
+.btn-group-vertical.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .btn-group-vertical {
+        width: 100%;
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 0.25rem;
+    }
+    
+    .col-md-4.text-md-end {
+        text-align: start !important;
+        margin-top: 1rem;
+    }
+}
+
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sorting functionality
+    const sortButtons = document.querySelectorAll('input[name="sort-order"]');
+    const wishlistItems = document.querySelectorAll('.wishlist-item');
+    
+    sortButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            const sortType = this.id;
+            const itemsArray = Array.from(wishlistItems);
+            
+            itemsArray.sort((a, b) => {
+                if (sortType === 'sort-newest') {
+                    return parseFloat(b.dataset.created) - parseFloat(a.dataset.created);
+                } else if (sortType === 'sort-oldest') {
+                    return parseFloat(a.dataset.created) - parseFloat(b.dataset.created);
+                } else if (sortType === 'sort-matches') {
+                    return parseInt(b.dataset.matches) - parseInt(a.dataset.matches);
+                }
+            });
+            
+            const container = document.querySelector('.wishlist-items');
+            itemsArray.forEach(item => container.appendChild(item));
+        });
+    });
+});
+
+// BookSwapBuddy namespace functions
+window.BookSwapBuddy = window.BookSwapBuddy || {};
+
+BookSwapBuddy.editWishlistItem = function(button) {
+    const itemId = button.getAttribute('data-item-id');
+    const title = button.getAttribute('data-title');
+    const author = button.getAttribute('data-author');
+    const subject = button.getAttribute('data-subject');
+    const department = button.getAttribute('data-department');
+    
+    document.getElementById('edit_item_id').value = itemId;
+    document.getElementById('edit_book_title').value = title;
+    document.getElementById('edit_author').value = author;
+    document.getElementById('edit_subject').value = subject;
+    document.getElementById('edit_department').value = department;
+};
+
+BookSwapBuddy.removeWishlistItem = function(itemId) {
+    if (confirm('Are you sure you want to remove this item from your wishlist?')) {
+        fetch(`/wishlist/${itemId}/remove`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                BookSwapBuddy.showAlert('Error removing item: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            BookSwapBuddy.showAlert('Error removing item', 'danger');
+        });
+    }
+};
+
+BookSwapBuddy.checkAllMatches = function() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking...';
+    button.disabled = true;
+    
+    fetch('/api/check-wishlist-matches', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookSwapBuddy.showAlert(`Found ${data.matches_found} new matches!`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            BookSwapBuddy.showAlert('Error checking matches: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        BookSwapBuddy.showAlert('Error checking matches', 'danger');
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+};
+
+// Auto-fill form from URL parameters
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const title = urlParams.get('title');
+    const author = urlParams.get('author');
+    const subject = urlParams.get('subject');
+    
+    if (title) {
+        document.getElementById('add_book_title').value = title;
+    }
+    if (author) {
+        document.getElementById('add_author').value = author;
+    }
+    if (subject) {
+        document.getElementById('add_subject').value = subject;
+    }
+    
+    // Show modal if parameters are present
+    if (title || author || subject) {
+        const modal = new bootstrap.Modal(document.getElementById('addWishlistModal'));
+        modal.show();
+    }
+});
+</script>
+{% endblock %}
